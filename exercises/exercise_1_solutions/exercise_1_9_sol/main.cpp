@@ -9,8 +9,8 @@
 // function declarations
 // ---------------------
 void createArrayBuffer(const std::vector<float> &array, unsigned int &VBO);
-void setupShape(unsigned int shaderProgram, unsigned int &VAO, unsigned int &vertexCount);
-void draw(unsigned int shaderProgram, unsigned int VAO, unsigned int vertexCount);
+void setupShape(unsigned int shaderProgram, unsigned int &VBO, unsigned int &VAO, unsigned int &vertexCount);
+void draw(unsigned int shaderProgram, unsigned int VAO,  unsigned int vertexCount);
 
 
 // glfw functions
@@ -45,6 +45,12 @@ const char *fragmentShaderSource = "#version 330 core\n"
                                    "}\n\0";
 
 
+// global variables
+std::vector<float> vertexData{
+// we need a point to initialize the VBO, made one outside of the NDC so it doesn't draw
+// position         // color
+        2.0f,  2.0f, 2.0f, 1.0f, 1.0f, 1.0f};
+bool newPointFlag = false;
 
 int main()
 {
@@ -129,11 +135,14 @@ int main()
 
     // setup vertex array object (VAO)
     // -------------------------------
-    unsigned int VAO, vertexCount;
+    unsigned int VAO=0, dataVBO=0, vertexCount=0;
     // generate geometry in a vertex array object (VAO), record the number of vertices in the mesh,
     // tells the shader how to read it
-    setupShape(shaderProgram, VAO, vertexCount);
+    setupShape(shaderProgram, dataVBO, VAO, vertexCount);
 
+    // NEW!
+    // we will draw points, we can set the size in pixels of the points
+    glPointSize(4.0f);
 
     // render loop
     // -----------
@@ -146,6 +155,11 @@ int main()
         // ------
         glClearColor(.2f, .2f, .2f, 1.0f); // background
         glClear(GL_COLOR_BUFFER_BIT); // clear the framebuffer
+
+        if(newPointFlag) {
+            setupShape(shaderProgram, dataVBO, VAO, vertexCount);
+            newPointFlag = false;
+        }
 
         draw(shaderProgram, VAO, vertexCount);
 
@@ -166,7 +180,8 @@ int main()
 // -------------------------------------------------------------------------------------------------
 void createArrayBuffer(const std::vector<float> &array, unsigned int &VBO){
     // create the VBO on OpenGL and get a handle to it
-    glGenBuffers(1, &VBO);
+    if(VBO == 0)
+        glGenBuffers(1, &VBO);
     // bind the VBO
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     // set the content of the VBO (type, size, pointer to start, and how it is used)
@@ -176,49 +191,42 @@ void createArrayBuffer(const std::vector<float> &array, unsigned int &VBO){
 
 // create the geometry, a vertex array object representing it, and set how a shader program should read it
 // -------------------------------------------------------------------------------------------------------
-void setupShape(const unsigned int shaderProgram,unsigned int &VAO, unsigned int &vertexCount){
+void setupShape(const unsigned int shaderProgram, unsigned int &VBO, unsigned int &VAO, unsigned int &vertexCount){
 
-    unsigned int posVBO, colorVBO;
-    createArrayBuffer(std::vector<float>{
-            // position
-            0.0f,  0.0f, 0.0f,
-            0.5f,  0.0f, 0.0f,
-            0.5f,  0.5f, 0.0f
-    }, posVBO);
+    bool initialization = VAO == 0;
 
-    createArrayBuffer( std::vector<float>{
-            // color
-            1.0f,  0.0f, 0.0f,
-            1.0f,  0.0f, 0.0f,
-            1.0f,  0.0f, 0.0f
-    }, colorVBO);
 
-    // tell how many vertices to draw
-    vertexCount = 3;
 
     // create a vertex array object (VAO) on OpenGL and save a handle to it
-    glGenVertexArrays(1, &VAO);
+    if(initialization)
+        glGenVertexArrays(1, &VAO);
 
     // bind vertex array object
     glBindVertexArray(VAO);
 
-    // set vertex shader attribute "aPos"
-    glBindBuffer(GL_ARRAY_BUFFER, posVBO);
+    createArrayBuffer(vertexData, VBO);
 
-    int posSize = 3;
-    int posAttributeLocation = glGetAttribLocation(shaderProgram, "aPos");
+    // tell how many vertices to draw
+    vertexCount = vertexData.size()/6;
 
-    glEnableVertexAttribArray(posAttributeLocation);
-    glVertexAttribPointer(posAttributeLocation, posSize, GL_FLOAT, GL_FALSE, 0, 0);
+    if(initialization) {
+        // set vertex shader attribute "aPos"
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
-    // set vertex shader attribute "aColor"
-    glBindBuffer(GL_ARRAY_BUFFER, colorVBO);
+        int posSize = 3;
+        int posAttributeLocation = glGetAttribLocation(shaderProgram, "aPos");
 
-    int colorSize = 3;
-    int colorAttributeLocation = glGetAttribLocation(shaderProgram, "aColor");
+        glEnableVertexAttribArray(posAttributeLocation);
+        glVertexAttribPointer(posAttributeLocation, posSize, GL_FLOAT, GL_FALSE, 2 * 3 * sizeof(float), 0);
 
-    glEnableVertexAttribArray(colorAttributeLocation);
-    glVertexAttribPointer(colorAttributeLocation, colorSize, GL_FLOAT, GL_FALSE, 0, 0);
+        // set vertex shader attribute "aColor"
+        int colorSize = 3;
+        int colorAttributeLocation = glGetAttribLocation(shaderProgram, "aColor");
+
+        glEnableVertexAttribArray(colorAttributeLocation);
+        glVertexAttribPointer(colorAttributeLocation, colorSize, GL_FLOAT, GL_FALSE, 2 * 3 * sizeof(float),
+                              (void *) (3 * sizeof(float)));
+    }
 
 }
 
@@ -231,9 +239,24 @@ void draw(const unsigned int shaderProgram, const unsigned int VAO, const unsign
     // bind vertex array object
     glBindVertexArray(VAO);
     // draw geometry
-    glDrawArrays(GL_TRIANGLES, 0, vertexCount);
+    glDrawArrays(GL_POINTS, 0, vertexCount); // notice that have changed the primitive to points
+
 }
 
+
+void addPoint(float x, float y){
+    vertexData.push_back(x);
+    vertexData.push_back(y);
+    vertexData.push_back(0.0f);
+    vertexData.push_back(1.0f);
+    vertexData.push_back(1.0f);
+    vertexData.push_back(1.0f);
+
+    newPointFlag = true;
+    //glBindBuffer(GL_ARRAY_BUFFER, dataVBO);
+    //glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(GLfloat), &vertexData[0], GL_STATIC_DRAW);
+    //vertexCount++;
+}
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------
@@ -241,6 +264,16 @@ void processInput(GLFWwindow *window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+        double xPos, yPos;
+        int xScreen, yScreen;
+        glfwGetCursorPos(window, &xPos, &yPos);
+        glfwGetWindowSize(window, &xScreen, &yScreen);
+        float xNdc = (float) xPos/(float) xScreen * 2.0f -1.0f;
+        float yNdc = (float) yPos/(float) yScreen * 2.0f -1.0f;
+        yNdc = -yNdc;
+        addPoint(xNdc, yNdc);
+    }
 }
 
 

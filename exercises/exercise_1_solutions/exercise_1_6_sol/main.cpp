@@ -178,20 +178,19 @@ void createArrayBuffer(const std::vector<float> &array, unsigned int &VBO){
 // -------------------------------------------------------------------------------------------------------
 void setupShape(const unsigned int shaderProgram,unsigned int &VAO, unsigned int &vertexCount){
 
-    unsigned int posVBO, colorVBO;
+    unsigned int posColorVBO;
     createArrayBuffer(std::vector<float>{
             // position
             0.0f,  0.0f, 0.0f,
             0.5f,  0.0f, 0.0f,
-            0.5f,  0.5f, 0.0f
-    }, posVBO);
-
-    createArrayBuffer( std::vector<float>{
+            0.5f,  0.5f, 0.0f,
             // color
             1.0f,  0.0f, 0.0f,
             1.0f,  0.0f, 0.0f,
             1.0f,  0.0f, 0.0f
-    }, colorVBO);
+    }, posColorVBO);
+
+
 
     // tell how many vertices to draw
     vertexCount = 3;
@@ -202,8 +201,8 @@ void setupShape(const unsigned int shaderProgram,unsigned int &VAO, unsigned int
     // bind vertex array object
     glBindVertexArray(VAO);
 
-    // set vertex shader attribute "aPos"
-    glBindBuffer(GL_ARRAY_BUFFER, posVBO);
+    // set vertex shader attribute "aPos" and "aColor", both are in the same VBO this time
+    glBindBuffer(GL_ARRAY_BUFFER, posColorVBO);
 
     int posSize = 3;
     int posAttributeLocation = glGetAttribLocation(shaderProgram, "aPos");
@@ -211,14 +210,11 @@ void setupShape(const unsigned int shaderProgram,unsigned int &VAO, unsigned int
     glEnableVertexAttribArray(posAttributeLocation);
     glVertexAttribPointer(posAttributeLocation, posSize, GL_FLOAT, GL_FALSE, 0, 0);
 
-    // set vertex shader attribute "aColor"
-    glBindBuffer(GL_ARRAY_BUFFER, colorVBO);
-
     int colorSize = 3;
     int colorAttributeLocation = glGetAttribLocation(shaderProgram, "aColor");
 
     glEnableVertexAttribArray(colorAttributeLocation);
-    glVertexAttribPointer(colorAttributeLocation, colorSize, GL_FLOAT, GL_FALSE, 0, 0);
+    glVertexAttribPointer(colorAttributeLocation, colorSize, GL_FLOAT, GL_FALSE, 0, (void*)(vertexCount * posSize * sizeof(float)));
 
 }
 

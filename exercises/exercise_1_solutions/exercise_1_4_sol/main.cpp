@@ -63,7 +63,7 @@ int main()
 
     // glfw window creation
     // --------------------
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Exercise 1.4", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -176,37 +176,42 @@ void createArrayBuffer(const std::vector<float> &array, unsigned int &VBO){
 
 // create the geometry, a vertex array object representing it, and set how a shader program should read it
 // -------------------------------------------------------------------------------------------------------
-void setupShape(const unsigned int shaderProgram, unsigned int &VAO, unsigned int &vertexCount){
+void setupShape(const unsigned int shaderProgram,unsigned int &VAO, unsigned int &vertexCount){
 
     unsigned int posVBO, colorVBO;
-    std::vector<float> data;
-    float PI = 3.14159265f;
+
+    std::vector<float> positions;
+    std::vector<float> colors;
+
     int triangleCount = 16;
-    float stepSize = 2.0f * PI / (float)triangleCount;
+    float PI = 3.14159265;
+    float angleInterval = (2*PI) / (float)triangleCount;
     for (int i = 0; i < triangleCount; i++){
-        data.push_back(0.0f);
-        data.push_back(0.0f);
-        data.push_back(0.0f);
+        // vertex 1
+        positions.push_back(0.0f);
+        positions.push_back(0.0f);
+        positions.push_back(0.0f);
 
-        data.push_back(cos(stepSize * i) * .5f);
-        data.push_back(sin(stepSize * i) * .5f);
-        data.push_back(0.0f);
+        // vertex 2
+        positions.push_back(cos(i*angleInterval) / 2);
+        positions.push_back(sin(i*angleInterval) / 2);
+        positions.push_back(0.0f);
 
-        data.push_back(cos(stepSize * (i+1)) * .5f);
-        data.push_back(sin(stepSize * (i+1)) * .5f);
-        data.push_back(0.0f);
+        // vertex 3
+        positions.push_back(cos((i+1)*angleInterval) / 2);
+        positions.push_back(sin((i+1)*angleInterval) / 2);
+        positions.push_back(0.0f);
     }
 
-    createArrayBuffer(data, posVBO);
-
-    for (int i = 0; i < data.size(); i++){
-        data[i] = data[i] + 0.5f;
+    for(int i = 0; i < positions.size(); i++){
+        colors.push_back(positions[i] + 0.5f);
     }
+    createArrayBuffer(positions, posVBO);
+    createArrayBuffer(colors, colorVBO);
 
-    createArrayBuffer(data, colorVBO);
 
     // tell how many vertices to draw
-    vertexCount = data.size() / 3;
+    vertexCount = positions.size()/3;
 
     // create a vertex array object (VAO) on OpenGL and save a handle to it
     glGenVertexArrays(1, &VAO);
@@ -219,7 +224,7 @@ void setupShape(const unsigned int shaderProgram, unsigned int &VAO, unsigned in
 
     int posSize = 3;
     int posAttributeLocation = glGetAttribLocation(shaderProgram, "aPos");
-
+    std::cout << "should be 0: " << posAttributeLocation << std::endl;
     glEnableVertexAttribArray(posAttributeLocation);
     glVertexAttribPointer(posAttributeLocation, posSize, GL_FLOAT, GL_FALSE, 0, 0);
 
@@ -228,15 +233,16 @@ void setupShape(const unsigned int shaderProgram, unsigned int &VAO, unsigned in
 
     int colorSize = 3;
     int colorAttributeLocation = glGetAttribLocation(shaderProgram, "aColor");
-
+    std::cout << "should be 1: " << colorAttributeLocation << std::endl;
     glEnableVertexAttribArray(colorAttributeLocation);
     glVertexAttribPointer(colorAttributeLocation, colorSize, GL_FLOAT, GL_FALSE, 0, 0);
 
+    glBindVertexArray(0);
 }
 
 
-// tell opengl to draw a vertex array object (VAO) using a given shaderProgram
-// ---------------------------------------------------------------------------
+// tell opengl to draw a vertex array object (VAO) using a give shaderProgram
+// --------------------------------------------------------------------------
 void draw(const unsigned int shaderProgram, const unsigned int VAO, const unsigned int vertexCount){
     // set active shader program
     glUseProgram(shaderProgram);
@@ -244,6 +250,7 @@ void draw(const unsigned int shaderProgram, const unsigned int VAO, const unsign
     glBindVertexArray(VAO);
     // draw geometry
     glDrawArrays(GL_TRIANGLES, 0, vertexCount);
+
 }
 
 

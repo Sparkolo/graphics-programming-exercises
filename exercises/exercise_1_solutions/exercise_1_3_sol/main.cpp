@@ -63,7 +63,7 @@ int main()
 
     // glfw window creation
     // --------------------
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Exercise 1.3", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -181,22 +181,22 @@ void setupShape(const unsigned int shaderProgram,unsigned int &VAO, unsigned int
     unsigned int posVBO, colorVBO;
     createArrayBuffer(std::vector<float>{
             // position
-            -0.5f,  -0.5f, 0.0f,
-            0.5f,  -0.5f, 0.0f,
-            0.5f,  0.5f, 0.0f,
-            -0.5f,  -0.5f, 0.0f,
-            0.5f,  0.5f, 0.0f,
-            -0.5f,  0.5f, 0.0f,
+            -0.5f, -0.5f, 0.0f, // vtx1: x, y, z
+            0.5f,  -0.5f, 0.0f, // vtx2: x, y, z
+            0.5f,  0.5f, 0.0f,  // vtx3: x, y, z
+            -0.5f,  -0.5f, 0.0f,  // vtx4: x, y, z
+            0.5f,  0.5f, 0.0f,  // vtx5: x, y, z
+            -0.5f,  0.5f, 0.0f  // vtx6: x, y, z
     }, posVBO);
 
     createArrayBuffer( std::vector<float>{
             // color
-            1.0f,  1.0f, 1.0f,
-            1.0f,  1.0f, 1.0f,
-            1.0f,  1.0f, 1.0f,
-            1.0f,  0.0f, 0.0f,
-            0.0f,  0.0f, 1.0f,
-            0.0f,  1.0f, 0.0f
+            1.0f,  1.0f, 1.0f, // col1: r, g, b
+            1.0f,  1.0f, 1.0f, // col2: r, g, b
+            1.0f,  1.0f, 1.0f, // col3: r, g, b
+            1.0f,  0.0f, 0.0f, // col4: r, g, b
+            0.0f,  0.0f, 1.0f, // col5: r, g, b
+            0.0f,  1.0f, 0.0f  // col6: r, g, b
     }, colorVBO);
 
     // tell how many vertices to draw
@@ -213,7 +213,7 @@ void setupShape(const unsigned int shaderProgram,unsigned int &VAO, unsigned int
 
     int posSize = 3;
     int posAttributeLocation = glGetAttribLocation(shaderProgram, "aPos");
-
+    std::cout << "should be 0: " << posAttributeLocation << std::endl;
     glEnableVertexAttribArray(posAttributeLocation);
     glVertexAttribPointer(posAttributeLocation, posSize, GL_FLOAT, GL_FALSE, 0, 0);
 
@@ -222,15 +222,16 @@ void setupShape(const unsigned int shaderProgram,unsigned int &VAO, unsigned int
 
     int colorSize = 3;
     int colorAttributeLocation = glGetAttribLocation(shaderProgram, "aColor");
-
+    std::cout << "should be 1: " << colorAttributeLocation << std::endl;
     glEnableVertexAttribArray(colorAttributeLocation);
     glVertexAttribPointer(colorAttributeLocation, colorSize, GL_FLOAT, GL_FALSE, 0, 0);
 
+    glBindVertexArray(0);
 }
 
 
-// tell opengl to draw a vertex array object (VAO) using a given shaderProgram
-// ---------------------------------------------------------------------------
+// tell opengl to draw a vertex array object (VAO) using a give shaderProgram
+// --------------------------------------------------------------------------
 void draw(const unsigned int shaderProgram, const unsigned int VAO, const unsigned int vertexCount){
     // set active shader program
     glUseProgram(shaderProgram);
@@ -238,6 +239,7 @@ void draw(const unsigned int shaderProgram, const unsigned int VAO, const unsign
     glBindVertexArray(VAO);
     // draw geometry
     glDrawArrays(GL_TRIANGLES, 0, vertexCount);
+
 }
 
 
