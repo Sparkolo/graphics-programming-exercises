@@ -181,9 +181,10 @@ void setupShape(const unsigned int shaderProgram,unsigned int &VAO, unsigned int
     unsigned int posVBO, colorVBO;
     createArrayBuffer(std::vector<float>{
             // position
-             0.0f,  0.0f, 0.0f,
-             0.5f,  0.0f, 0.0f,
-             0.5f,  0.5f, 0.0f
+             -0.5f,  -0.5f, 0.0f,
+             0.5f,  -0.5f, 0.0f,
+             0.5f,  0.5f, 0.0f,
+             -0.5f, 0.5f, 0.0f
     }, posVBO);
 
     createArrayBuffer( std::vector<float>{
