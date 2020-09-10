@@ -1,3 +1,5 @@
+#define _USE_MATH_DEFINES
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
@@ -179,22 +181,37 @@ void createArrayBuffer(const std::vector<float> &array, unsigned int &VBO){
 void setupShape(const unsigned int shaderProgram,unsigned int &VAO, unsigned int &vertexCount){
 
     unsigned int posVBO, colorVBO;
-    createArrayBuffer(std::vector<float>{
-            // position
-            0.0f,  0.0f, 0.0f,
-            0.5f,  0.0f, 0.0f,
-            0.5f,  0.5f, 0.0f
-    }, posVBO);
+    std::vector<float> positions, colors;
 
-    createArrayBuffer( std::vector<float>{
-            // color
-            1.0f,  0.0f, 0.0f,
-            1.0f,  0.0f, 0.0f,
-            1.0f,  0.0f, 0.0f
-    }, colorVBO);
+    int triangleCount = 16;
+    float angle = 2 * M_PI / triangleCount;
+
+    for (int i=0; i < triangleCount; i++) {
+        // first vertex
+        positions.push_back(0.0f);
+        positions.push_back(0.0f);
+        positions.push_back(0.0f);
+
+        // second vertex
+        positions.push_back(cos(angle*i) / 2);
+        positions.push_back(sin(angle*i) / 2);
+        positions.push_back(0.0f);
+
+        // third vertex
+        positions.push_back(cos(angle*(i+1)) / 2);
+        positions.push_back(sin(angle*(i+1)) / 2);
+        positions.push_back(0.0f);
+    }
+
+    for (int i=0; i < positions.size(); i++) {
+        colors.push_back(positions[i] + 0.5f);
+    }
+
+    createArrayBuffer(positions, posVBO);
+    createArrayBuffer( colors, colorVBO);
 
     // tell how many vertices to draw
-    vertexCount = 3;
+    vertexCount = triangleCount * 3;
 
     // create a vertex array object (VAO) on OpenGL and save a handle to it
     glGenVertexArrays(1, &VAO);
