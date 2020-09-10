@@ -1,3 +1,5 @@
+#define _USE_MATH_DEFINES
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
@@ -173,28 +175,60 @@ void createArrayBuffer(const std::vector<float> &array, unsigned int &VBO){
     glBufferData(GL_ARRAY_BUFFER, array.size() * sizeof(GLfloat), &array[0], GL_STATIC_DRAW);
 }
 
+// create a element buffer object (EBO) from an array of indices, return EBO handle (set as reference)
+// -------------------------------------------------------------------------------------------------
+void createElementsBuffer(const std::vector<unsigned int> &array, unsigned int &EBO){
+    // create the VBO on OpenGL and get a handle to it
+    glGenBuffers(1, &EBO);
+    // bind the VBO
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    // set the content of the VBO (type, size, pointer to start, and how it is used)
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, array.size() * sizeof(GLint), &array[0], GL_STATIC_DRAW);
+}
+
 
 // create the geometry, a vertex array object representing it, and set how a shader program should read it
 // -------------------------------------------------------------------------------------------------------
 void setupShape(const unsigned int shaderProgram,unsigned int &VAO, unsigned int &vertexCount){
+    std::vector<float> positionColors;
+    std::vector<unsigned int> indices;
 
-    unsigned int posVBO, colorVBO;
-    createArrayBuffer(std::vector<float>{
-            // position
-            0.0f,  0.0f, 0.0f,
-            0.5f,  0.0f, 0.0f,
-            0.5f,  0.5f, 0.0f
-    }, posVBO);
+    int triangleCount = 16;
+    float angle = 2 * M_PI / triangleCount;
 
-    createArrayBuffer( std::vector<float>{
-            // color
-            1.0f,  0.0f, 0.0f,
-            1.0f,  0.0f, 0.0f,
-            1.0f,  0.0f, 0.0f
-    }, colorVBO);
+    // center vertex position
+    positionColors.push_back(0.0f);
+    positionColors.push_back(0.0f);
+    positionColors.push_back(0.0f);
+    // center vertex color
+    positionColors.push_back(0.5f);
+    positionColors.push_back(0.5f);
+    positionColors.push_back(0.5f);
+    // all the other vertices in order with position followed by color
+    for (int i=0; i < triangleCount; i++) {
+        // positions
+        positionColors.push_back(cos(angle*i) / 2);
+        positionColors.push_back(sin(angle*i) / 2);
+        positionColors.push_back(0.0f);
+        // colors
+        positionColors.push_back(cos(angle*i) / 2 + 0.5f);
+        positionColors.push_back(sin(angle*i) / 2 + 0.5f);
+        positionColors.push_back(0.5f);
+    }
+
+    for(int i=0; i<triangleCount; i++) {
+        indices.push_back(0);
+        indices.push_back(i+1);
+        indices.push_back(i+2 > triangleCount ? 1 : i+2);
+    }
+
+
+    unsigned int VBO, EBO;
+    createArrayBuffer(positionColors, VBO);
+    createElementsBuffer(indices, EBO);
 
     // tell how many vertices to draw
-    vertexCount = 3;
+    vertexCount = positionColors.size();
 
     // create a vertex array object (VAO) on OpenGL and save a handle to it
     glGenVertexArrays(1, &VAO);
@@ -202,24 +236,25 @@ void setupShape(const unsigned int shaderProgram,unsigned int &VAO, unsigned int
     // bind vertex array object
     glBindVertexArray(VAO);
 
-    // set vertex shader attribute "aPos"
-    glBindBuffer(GL_ARRAY_BUFFER, posVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 
     int posSize = 3;
+    int colorSize = 3;
+
+    // set vertex shader attribute "aPos"
     int posAttributeLocation = glGetAttribLocation(shaderProgram, "aPos");
 
     glEnableVertexAttribArray(posAttributeLocation);
-    glVertexAttribPointer(posAttributeLocation, posSize, GL_FLOAT, GL_FALSE, 0, 0);
+    glVertexAttribPointer(posAttributeLocation, posSize, GL_FLOAT, GL_FALSE, (posSize + colorSize) * sizeof(float), 0);
 
     // set vertex shader attribute "aColor"
-    glBindBuffer(GL_ARRAY_BUFFER, colorVBO);
-
-    int colorSize = 3;
     int colorAttributeLocation = glGetAttribLocation(shaderProgram, "aColor");
 
     glEnableVertexAttribArray(colorAttributeLocation);
-    glVertexAttribPointer(colorAttributeLocation, colorSize, GL_FLOAT, GL_FALSE, 0, 0);
+    glVertexAttribPointer(colorAttributeLocation, colorSize, GL_FLOAT, GL_FALSE, (posSize + colorSize) * sizeof(float), reinterpret_cast<void*>(posSize * sizeof(float)));
 
+    glBindVertexArray(0);
 }
 
 
@@ -231,7 +266,8 @@ void draw(const unsigned int shaderProgram, const unsigned int VAO, const unsign
     // bind vertex array object
     glBindVertexArray(VAO);
     // draw geometry
-    glDrawArrays(GL_TRIANGLES, 0, vertexCount);
+    //glDrawArrays(GL_TRIANGLES, 0, vertexCount);
+    glDrawElements(GL_TRIANGLES, vertexCount, GL_UNSIGNED_INT, 0);
 }
 
 
@@ -248,8 +284,7 @@ void processInput(GLFWwindow *window)
 // ---------------------------------------------------------------------------------------------
 void framebufferSizeCallback(GLFWwindow* window, int width, int height)
 {
-    // make sure the viewport matches the new window dimensions; note that width and 
+    // make sure the viewport matches the new window dimensions; note that width and
     // height will be significantly larger than specified on retina displays.
     glViewport(0, 0, width, height);
 }
-
