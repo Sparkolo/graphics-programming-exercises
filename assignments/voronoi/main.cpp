@@ -164,7 +164,7 @@ SceneObject instantiateCone(float r, float g, float b, float offsetX, float offs
     float radius = sqrt(8.0f);
     float maxError = 2.0f / SCR_WIDTH; // Error of 1 pixel
     float angle = 2 * acosf((radius - maxError) / radius);
-    float triangleCount = 6 * M_PI / angle;
+    float triangleCount = 2 * M_PI / angle;
 
     // cone tip vertex position
     positions.push_back(0.0f);
@@ -185,7 +185,7 @@ SceneObject instantiateCone(float r, float g, float b, float offsetX, float offs
     }
 
     // Store the number of vertices in the mesh in the scene object.
-    sceneObject.vertexCount = positions.size() / 3;
+    sceneObject.vertexCount = positions.size();
 
     // Declare and generate a VAO and VBO (and an EBO if you decide the work with indices).
     unsigned int VBO, EBO, VAO;
@@ -256,7 +256,12 @@ void key_input_callback(GLFWwindow* window, int button, int other,int action, in
     // see documentation at https://www.glfw.org/docs/latest/input_guide.html#input_keyboard
     // Key 1 sets the activeShader to &shaderPrograms[0];
     //   and so on.
-    // CODE HERE
+    if(button == GLFW_KEY_1 && action == GLFW_PRESS)
+        activeShader = &shaderPrograms[0];
+    if(button == GLFW_KEY_2 && action == GLFW_PRESS)
+        activeShader = &shaderPrograms[1];
+    if(button == GLFW_KEY_3 && action == GLFW_PRESS)
+        activeShader = &shaderPrograms[2];
 }
 
 
