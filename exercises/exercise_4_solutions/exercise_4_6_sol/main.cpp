@@ -324,7 +324,7 @@ void cursor_input_callback(GLFWwindow* window, double posX, double posY){
     auto positionDiff = cursorPosition - lastCursorPosition;
 
     // require a minimum threshold to rotate
-    if (glm::dot(positionDiff, positionDiff) > .00001f){
+    if (glm::dot(positionDiff, positionDiff) > 1e-5f){
         // rotate the forward vector around the Y axis, notices that w is set to 0 since it is a vector
         rotationAroundVertical += glm::radians(-positionDiff.x * rotationGain);
         camForward = glm::rotateY(rotationAroundVertical) * glm::vec4(0,0,-1,0);

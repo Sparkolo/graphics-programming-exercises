@@ -68,10 +68,7 @@ glm::vec2 clickStart(0.0f), clickEnd(0.0f);
 
 // TODO 4.1 and 4.2 - global variables you might need
 bool isClicking = false;
-//bool throwPlane = false;
 SceneObject arrow;
-//float planeSpeed = 0.0f;
-//glm::vec2 planePosition = glm::vec2(0.0,0.0);
 
 int main()
 {
