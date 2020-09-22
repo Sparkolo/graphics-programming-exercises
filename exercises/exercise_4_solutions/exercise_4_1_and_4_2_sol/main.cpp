@@ -312,7 +312,7 @@ void drawSceneObject(SceneObject obj){
 
 void setup(){
     // initialize shaders
-    shaderProgram = new Shader("shader.vert", "shader.frag");
+    shaderProgram = new Shader("shaders/shader.vert", "shaders/shader.frag");
 
     // initialize plane body mesh objects
     planeBody.VAO = createVertexArray(planeBodyVertices, planeBodyColors, planeBodyIndices);

@@ -292,7 +292,7 @@ void drawObject(){
 
 void setup(){
     // initialize shaders
-    shaderProgram = new Shader("shader.vert", "shader.frag");
+    shaderProgram = new Shader("shaders/shader.vert", "shaders/shader.frag");
 
     cube.VAO = createVertexArray(cubeVertices, cubeColors, cubeIndices);
     cube.vertexCount = cubeIndices.size();
