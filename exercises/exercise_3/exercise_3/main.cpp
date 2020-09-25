@@ -37,8 +37,8 @@ void processInput(GLFWwindow *window);
 
 // settings
 // --------
-const unsigned int SCR_WIDTH = 600;
-const unsigned int SCR_HEIGHT = 600;
+const unsigned int SCR_WIDTH = 900;
+const unsigned int SCR_HEIGHT = 900;
 
 // plane parts
 // -----------
@@ -48,6 +48,14 @@ SceneObject planePropeller;
 
 float currentTime;
 Shader* shaderProgram;
+
+// Plane parameters
+float planeScaleSize = 0.1f;
+glm::vec2 planePosition = glm::vec2(0, 0);
+float planeRotation = 0.0f;
+float planeLeaning = 0.0f;
+float planeSpeed = 0.005f;
+float rotationSpeed = (float) M_PI / 90;
 
 int main()
 {
@@ -145,15 +153,36 @@ int main()
 
 
 void drawPlane(){
-    // TODO 3.all create and apply your transformation matrices here
-    //  you will need to transform the pose of the pieces of the plane by manipulating glm matrices and uploading a
-    //  uniform mat4 model matrix to the vertex shader
-    glm::mat4 identityMat, leftWingMat, leftTailMat, rightTailMat, propellerMat;
-    identityMat = leftWingMat = leftTailMat = rightTailMat = propellerMat = glm::mat4(1.0f);
+    glm::mat4 basicMat, leftWingMat, leftTailMat, rightTailMat, propellerMat;
+    basicMat = glm::mat4(1.0f);
+
+    // Calculate the direction in which to move based on the rotation of the plane
+    glm::mat4 rotationMat = glm::rotateZ(planeRotation);
+    planePosition.x += (rotationMat * glm::vec4(0, planeSpeed, 0, 1)).x;
+    planePosition.y += (rotationMat * glm::vec4(0, planeSpeed, 0, 1)).y;
+
+    // Wrap the plane if it gets off the screen
+    planePosition.x = glm::mod(planePosition.x + 1.0f, 2.0f) -1.0f;
+    planePosition.y = glm::mod(planePosition.y + 1.0f, 2.0f) -1.0f;
+
+    // Translate the plane forward to emulate speed
+    basicMat = glm::translate(basicMat, glm::vec3(planePosition, 0));
+
+    // Rotate the plane based on the curent rotation and leaning
+    basicMat = glm::rotate(basicMat, planeRotation, glm::vec3(0,0,1));
+    basicMat = glm::rotate(basicMat, planeLeaning, glm::vec3(0,1,0));
+
+    // Set the scale of the plane
+    basicMat = glm::scale(basicMat, glm::vec3(planeScaleSize));
+
+    // Use the basic mat for all matrices
+    leftWingMat = leftTailMat = rightTailMat = propellerMat = basicMat;
+
+    // Apply the correct transformations to the various plane parts
     unsigned int modelLoc = glGetUniformLocation(shaderProgram->ID, "model");
 
     // Body and right wing is fine already, just send the identity matrix
-    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(identityMat));
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(basicMat));
     drawSceneObject(planeBody);
     drawSceneObject(planeWing);
     // Setup the left wing
@@ -172,9 +201,9 @@ void drawPlane(){
     drawSceneObject(planeWing);
     // Setup the plane propeller
     propellerMat = glm::translate(propellerMat, glm::vec3(0, 0.5, 0.0));
-    propellerMat = glm::rotate(propellerMat, (float)glfwGetTime(), glm::vec3(0, 1, 0));
-    propellerMat = glm::scale(propellerMat, glm::vec3(0.5, 0.5, 0.5));
+    propellerMat = glm::rotate(propellerMat, currentTime * 3, glm::vec3(0, 1, 0));
     propellerMat = glm::rotate(propellerMat, (float)M_PI / 2, glm::vec3(1,0,0));
+    propellerMat = glm::scale(propellerMat, glm::vec3(0.5, 0.5, 0.5));
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(propellerMat));
     drawSceneObject(planePropeller);
 }
@@ -185,9 +214,6 @@ void drawSceneObject(SceneObject obj){
 }
 
 void setup(){
-
-    // TODO 3.3 you will need to load one additional object.
-
     // initialize plane body mesh objects
     planeBody.VAO = createVertexArray(planeBodyVertices, planeBodyColors, planeBodyIndices);
     planeBody.vertexCount = planeBodyIndices.size();
@@ -252,11 +278,17 @@ void processInput(GLFWwindow *window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
-    // TODO 3.4 control the plane (turn left and right) using the A and D keys
-    // you will need to read A and D key press inputs
-    // if GLFW_KEY_A is GLFW_PRESS, plane turn left
-    // if GLFW_KEY_D is GLFW_PRESS, plane turn right
-
+    if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+        planeRotation += rotationSpeed;
+        planeLeaning = - M_PI / 4;
+    }
+    else if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+        planeRotation -= rotationSpeed;
+        planeLeaning = M_PI / 4;
+    }
+    else {
+        planeLeaning = 0;
+    }
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
