@@ -1,3 +1,5 @@
+#define _USE_MATH_DEFINES
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
@@ -42,6 +44,7 @@ const unsigned int SCR_HEIGHT = 600;
 // -----------
 SceneObject planeBody;
 SceneObject planeWing;
+SceneObject planePropeller;
 
 float currentTime;
 Shader* shaderProgram;
@@ -145,9 +148,35 @@ void drawPlane(){
     // TODO 3.all create and apply your transformation matrices here
     //  you will need to transform the pose of the pieces of the plane by manipulating glm matrices and uploading a
     //  uniform mat4 model matrix to the vertex shader
+    glm::mat4 identityMat, leftWingMat, leftTailMat, rightTailMat, propellerMat;
+    identityMat = leftWingMat = leftTailMat = rightTailMat = propellerMat = glm::mat4(1.0f);
+    unsigned int modelLoc = glGetUniformLocation(shaderProgram->ID, "model");
 
+    // Body and right wing is fine already, just send the identity matrix
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(identityMat));
     drawSceneObject(planeBody);
     drawSceneObject(planeWing);
+    // Setup the left wing
+    leftWingMat = glm::scale(leftWingMat, glm::vec3(-1, 1, 1));
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(leftWingMat));
+    drawSceneObject(planeWing);
+    // Setup the left tail
+    leftTailMat = glm::translate(leftTailMat, glm::vec3(0, -0.5, 0));
+    leftTailMat = glm::scale(leftTailMat, glm::vec3(-0.5, 0.5, 0.5));
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(leftTailMat));
+    drawSceneObject(planeWing);
+    // Setup the right tail
+    rightTailMat = glm::translate(rightTailMat, glm::vec3(0, -0.5, 0));
+    rightTailMat = glm::scale(rightTailMat, glm::vec3(0.5, 0.5, 0.5));
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(rightTailMat));
+    drawSceneObject(planeWing);
+    // Setup the plane propeller
+    propellerMat = glm::translate(propellerMat, glm::vec3(0, 0.5, 0.0));
+    propellerMat = glm::rotate(propellerMat, (float)glfwGetTime(), glm::vec3(0, 1, 0));
+    propellerMat = glm::scale(propellerMat, glm::vec3(0.5, 0.5, 0.5));
+    propellerMat = glm::rotate(propellerMat, (float)M_PI / 2, glm::vec3(1,0,0));
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(propellerMat));
+    drawSceneObject(planePropeller);
 }
 
 void drawSceneObject(SceneObject obj){
@@ -166,6 +195,10 @@ void setup(){
     // initialize plane wing mesh objects
     planeWing.VAO = createVertexArray(planeWingVertices, planeWingColors, planeWingIndices);
     planeWing.vertexCount = planeWingIndices.size();
+
+    // initialize plane wing mesh objects
+    planePropeller.VAO = createVertexArray(planePropellerVertices, planePropellerColors, planePropellerIndices);
+    planePropeller.vertexCount = planePropellerIndices.size();
 }
 
 
