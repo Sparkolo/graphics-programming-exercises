@@ -1,5 +1,5 @@
 ## set target project
-file(GLOB target_src "*.h" "*.cpp" "rasterizer/*.h" "rasterizer/*.cpp") # look for source files
+file(GLOB target_src "*.h" "*.cpp" "rasterizer/*.h" "rasterizer/*.cpp" "software_renderer_lib/*.h" "software_renderer_lib/*.cpp") # look for source files
 file(GLOB target_shaders "shaders/*.vert" "shaders/*.frag") # look for shaders
 add_executable(${subdir} ${target_src} ${target_shaders})
 

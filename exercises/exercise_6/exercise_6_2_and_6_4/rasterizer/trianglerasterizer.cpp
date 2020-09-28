@@ -65,7 +65,7 @@ void triangle_rasterizer::next_fragment()
             this->x_stop    = rightedge.x() - 1;
             this->y_current = leftedge.y();
 
-            // TODO ex 6.2
+            // TODO
             // reset the variables used for interpolation using the information of the current scanline ~ 2 lines
 
 
